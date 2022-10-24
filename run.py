@@ -31,7 +31,7 @@ def parse_args():
     parser.add_argument('--dataset_dir', type=str, default='data/depparsed',
                         choices=['rest', 'laptop', 'twitter'],
                         help='Directory to load depparsed data.')
-    parser.add_argument('--output_dir', type=str, default='data/output',
+    parser.add_argument('--output_dir', type=str, default='../output',
                         help='Directory to store intermedia data, such as vocab, embeddings, tags_vocab.')
     parser.add_argument('--bert_model_dir', type=str, default='../bert',
                         help='Path to pre-trained Bert model.')
@@ -146,7 +146,8 @@ def main():
     if len(all_eval_results):
         best_eval_result = max(all_eval_results, key=lambda x: x['acc'])
         for key in sorted(best_eval_result.keys()):
-            logger.info("  %s = %s", key, str(best_eval_result[key]))
+            # logger.info("  %s = %s", key, str(best_eval_result[key]))
+            print("  %s = %s" % (key, str(best_eval_result[key])))
 
 if __name__ == '__main__':
     main()
