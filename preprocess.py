@@ -357,7 +357,45 @@ def get_vocabs(data, args):
 
     return word_vecs, word_vocab, dep_tag_vocab, pos_tag_vocab
 
+
+# def get_merged_data(reshaped_data):
+
+
 def preprocess(args):
+    train, test = load_dataset(args)
+    train_reshaped = get_reshaped_data(train, args)
+    test_reshaped = get_reshaped_data(test, args)
+
+    logger.info('****** After reshaping ******')
+    logger.info('Train set size: %s', len(train_reshaped))
+    logger.info('Test set size: %s,', len(test_reshaped))
+
+    # 创建词表(part of speech, dep_tag) 并持久化存储 pickles.
+    word_vecs, word_vocab, dep_tag_vocab, pos_tag_vocab = get_vocabs(
+        train_reshaped + test_reshaped, args)
+
+    logger.info('****** After getting vocab ******')
+
+    # 创建 Dataset
+    train_dataset = ASBA_Depparsed_Dataset(
+        train_reshaped, args, word_vocab, dep_tag_vocab, pos_tag_vocab)
+    test_dataset = ASBA_Depparsed_Dataset(
+        test_reshaped, args, word_vocab, dep_tag_vocab, pos_tag_vocab)
+    logger.info('****** After building dataset ******')
+
+    return train_dataset, test_dataset, word_vocab, dep_tag_vocab, pos_tag_vocab
+
+def load_dataset_infer(args):
+    train_file, test_file=get_depparsed_file(args)
+
+    train = list(load_depparsed(train_file))
+    logger.info('# Read %s Infer set: %d', args.dataset_name, len(train))
+
+    test = list(load_depparsed(test_file))
+    logger.info("# Read %s Test set: %d", args.dataset_name, len(test))
+    return train, test
+
+def preprocess_infer(args):
     train, test = load_dataset(args)
     train_reshaped = get_reshaped_data(train, args)
     test_reshaped = get_reshaped_data(test, args)

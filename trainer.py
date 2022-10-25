@@ -193,7 +193,10 @@ def train(args, train_dataset, model, test_dataset):
     model.zero_grad()
     train_iterator = trange(int(args.num_train_epochs), desc="Epoch")
     set_seed(args)
+    max_acc=0
+    epoch_count=0
     for _ in train_iterator:
+        epoch_count+=1
         epoch_iterator = tqdm(train_dataloader, desc='Iteration')
         # logger.info("start train iterator")
         for step, batch in enumerate(train_dataloader):
@@ -232,7 +235,11 @@ def train(args, train_dataset, model, test_dataset):
                         'train_loss', (tr_loss - logging_loss) / args.logging_steps, global_step)
                     logging_loss = tr_loss
 
-                # Save model checkpoint
+                    # Save model checkpoint
+                    if results['acc']>max_acc:
+                        max_acc = results['acc']
+                        print("save model at epoch ", epoch_count, " acc:", max_acc)
+                        torch.save(model.state_dict(), os.path.join(args.output_dir, 'md.pt'))
 
             if args.max_steps > 0 and global_step > args.max_steps:
                 epoch_iterator.close()

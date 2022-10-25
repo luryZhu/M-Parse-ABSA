@@ -2,12 +2,13 @@ import argparse
 import logging
 from preprocess import preprocess
 from model import Aspect_Bert_GAT
-from trainer import train, evaluate_badcase
+from trainer import get_collate_fn
 import os
 import torch
 import random
 import numpy as np
 from transformers import BertTokenizer
+from torch.utils.data import DataLoader
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -106,12 +107,6 @@ def parse_args():
 
     return parser.parse_args()
 
-def set_seed(args):
-    random.seed(args.seed)
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
-    torch.cuda.manual_seed_all(args.seed)
-
 
 def main():
     # Setup logging
@@ -119,39 +114,28 @@ def main():
                         datefmt='%m/%d/%Y %H:%M:%S',
                         level=logging.INFO)
     args = parse_args()
-
-    os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_id
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    args.device = device
-    logger.info('Device is %s', args.device)
-
-    # Bert, load pretrained model and tokenizer, check if neccesary to put bert here
-    if args.embedding_type == 'bert':
-        tokenizer = BertTokenizer.from_pretrained(args.bert_model_dir)
-        args.tokenizer = tokenizer
-
-    logger.info('###### start prepare dataset & vocab ######')
-    # 获取 Dataset 和 vocab
+    args.device = 'cpu'
+    args.tokenizer = BertTokenizer.from_pretrained(args.bert_model_dir)
     train_dataset, test_dataset, word_vocab, dep_tag_vocab, pos_tag_vocab = preprocess(args)
 
-    logger.info('###### start prepare model ######')
     # 获取 模型
     model = Aspect_Bert_GAT(args, dep_tag_vocab['len'], pos_tag_vocab['len'])  # R-GAT + Bert
 
-    logger.info('###### start training ######')
-    model.to(args.device)
-    _, _, all_eval_results = train(args, train_dataset, model, test_dataset)
-
-    logger.info('###### start evaluating ######')
-    if len(all_eval_results):
-        best_eval_result = max(all_eval_results, key=lambda x: x['acc'])
-        for key in sorted(best_eval_result.keys()):
-            # logger.info("  %s = %s", key, str(best_eval_result[key]))
-            print("  %s = %s" % (key, str(best_eval_result[key])))
-
     m_state_dict = torch.load(os.path.join(args.output_dir, 'md.pt'))
     best_model = model.load_state_dict(m_state_dict)
-    evaluate_badcase(args, test_dataset, best_model, word_vocab)
+
+    collate_fn=get_collate_fn(args)
+    eval_dataset=test_dataset[2]
+    eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler,
+                                 batch_size=args.eval_batch_size,
+                                 collate_fn=collate_fn)
+    predict = best_model(test_dataset.data[0])
+    print(predict)
+
+
+
+
+
 
 
 if __name__ == '__main__':
