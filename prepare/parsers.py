@@ -81,7 +81,7 @@ class Parser:
         with open(extended_filename, 'w') as f:
             json.dump(json_data, f)
         print('done', len(json_data))
-        print(idx)
+        # print(idx)
 
 
 '''
