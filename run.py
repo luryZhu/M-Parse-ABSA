@@ -151,6 +151,7 @@ def main():
 
     m_state_dict = torch.load(os.path.join(args.output_dir, 'md.pt'))
     best_model = model.load_state_dict(m_state_dict)
+    best_model = best_model.to(args.device)
     evaluate_badcase(args, test_dataset, best_model, word_vocab)
 
 
