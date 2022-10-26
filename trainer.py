@@ -13,6 +13,7 @@ from tqdm import tqdm, trange
 
 from transformers import AdamW
 from transformers import BertTokenizer
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -306,6 +307,7 @@ def evaluate(args, eval_dataset, model):
             writer.write('\n')
         writer.write('\n')
     return results, eval_loss
+
 
 
 def evaluate_badcase(args, eval_dataset, model, word_vocab):

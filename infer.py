@@ -2,13 +2,14 @@ import argparse
 import logging
 from preprocess import preprocess
 from model import Aspect_Bert_GAT
-from trainer import get_collate_fn
+from trainer import get_collate_fn, evaluate_badcase
 import os
 import torch
 import random
 import numpy as np
 from transformers import BertTokenizer
 from torch.utils.data import DataLoader
+import json
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -108,6 +109,12 @@ def parse_args():
     return parser.parse_args()
 
 
+def write_badcases(file_path, data):
+    with open(file_path, 'w') as f:
+        json.dump(data, f)
+    print('done', len(data))
+
+
 def main():
     # Setup logging
     logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
@@ -117,20 +124,21 @@ def main():
     args.device = 'cpu'
     args.tokenizer = BertTokenizer.from_pretrained(args.bert_model_dir)
     train_dataset, test_dataset, word_vocab, dep_tag_vocab, pos_tag_vocab = preprocess(args)
+    model_path= os.path.join(args.output_dir, 'models', args.parser_name+'_md.pt')
 
     # 获取 模型
     model = Aspect_Bert_GAT(args, dep_tag_vocab['len'], pos_tag_vocab['len'])  # R-GAT + Bert
 
-    m_state_dict = torch.load(os.path.join(args.output_dir, 'md.pt'))
-    best_model = model.load_state_dict(m_state_dict)
+    m_state_dict = torch.load(model_path)
+    model.load_state_dict(m_state_dict)
 
-    collate_fn=get_collate_fn(args)
-    eval_dataset=test_dataset[2]
-    eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler,
-                                 batch_size=args.eval_batch_size,
-                                 collate_fn=collate_fn)
-    predict = best_model(test_dataset.data[0])
-    print(predict)
+    model = model.to(args.device)
+    badcases = evaluate_badcase(args, test_dataset, model, word_vocab)
+    print("collect badcases", len(badcases))
+
+    write_badcases(os.path.join(args.output_dir, args.parser_name+'_bad.json'), badcases)
+
+
 
 
 
