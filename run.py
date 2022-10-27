@@ -1,8 +1,8 @@
 import argparse
 import logging
 from preprocess import preprocess
-from model import Aspect_Bert_GAT
-from trainer import train, evaluate_badcase
+from model import Aspect_Bert_GAT, Aspect_Text_GAT_only
+from trainer import train
 import os
 import torch
 import random
@@ -35,6 +35,8 @@ def parse_args():
                         help='Directory to store intermedia data, such as vocab, embeddings, tags_vocab.')
     parser.add_argument('--bert_model_dir', type=str, default='../bert',
                         help='Path to pre-trained Bert model.')
+    parser.add_argument('--glove_dir', type=str, default='../glove',
+                        help='Directory storing glove embeddings')
 
     parser.add_argument('--multi_hop', type=bool, default=True,
                         help='open multi_hop')
@@ -122,7 +124,7 @@ def main():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_id
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    args.device = device
+    args.device = 'cpu'
     logger.info('Device is %s', args.device)
 
     # Bert, load pretrained model and tokenizer, check if neccesary to put bert here
@@ -136,7 +138,17 @@ def main():
 
     logger.info('###### start prepare model ######')
     # 获取 模型
-    model = Aspect_Bert_GAT(args, dep_tag_vocab['len'], pos_tag_vocab['len'])  # R-GAT + Bert
+    # if args.pure_bert:
+    #     model = Pure_Bert(args)
+    if args.gat_bert:
+        model = Aspect_Bert_GAT(args, dep_tag_vocab['len'], pos_tag_vocab['len'])  # R-GAT + Bert
+    # elif args.gat_our:
+    #     model = Aspect_Text_GAT_ours(args, dep_tag_vocab['len'], pos_tag_vocab['len'])  # R-GAT with reshaped tree
+    else:
+        model = Aspect_Text_GAT_only(args, dep_tag_vocab['len'],
+                                     pos_tag_vocab['len'])  # original GAT with reshaped tree
+
+    # model = Aspect_Bert_GAT(args, dep_tag_vocab['len'], pos_tag_vocab['len'])  # R-GAT + Bert
 
     logger.info('###### start training ######')
     model.to(args.device)

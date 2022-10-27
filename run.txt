@@ -1,0 +1,14 @@
+
+--glove_dir
+# pure GAT
+--glove_dir ./glove
+--embedding_type glove
+--output_dir /kaggle/working
+--parser_name Stanza CoreNLP Biaffine
+--gat_bert
+
+--dropout 0.3 --hidden_size 200 --learning_rate 5e-5
+
+--glove_dir
+# pure GAT
+--glove_dir ../glove --embedding_type glove --dropout 0.3 --hidden_size 200 --learning_rate 5e-5

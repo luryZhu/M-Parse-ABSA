@@ -120,19 +120,62 @@ def get_input_from_batch(args, batch):
             labels = batch[10]
     return inputs, labels
 
+# glove collate
+def my_collate(batch):
+    '''
+    Pad sentence and aspect in a batch.
+    Sort the sentences based on length.
+    Turn all into tensors.
+    '''
+    sentence_ids, aspect_ids, dep_tag_ids, pos_class, text_len, aspect_len, sentiment, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids = zip(
+        *batch)  # from Dataset.__getitem__()
+    text_len = torch.tensor(text_len)
+    aspect_len = torch.tensor(aspect_len)
+    sentiment = torch.tensor(sentiment)
+
+    # Pad sequences.
+    sentence_ids = pad_sequence(
+        sentence_ids, batch_first=True, padding_value=0)
+    aspect_ids = pad_sequence(aspect_ids, batch_first=True, padding_value=0)
+    aspect_positions = pad_sequence(
+        aspect_positions, batch_first=True, padding_value=0)
+
+    dep_tag_ids = pad_sequence(dep_tag_ids, batch_first=True, padding_value=0)
+    dep_dir_ids = pad_sequence(dep_dir_ids, batch_first=True, padding_value=0)
+    pos_class = pad_sequence(pos_class, batch_first=True, padding_value=0)
+
+    dep_rel_ids = pad_sequence(dep_rel_ids, batch_first=True, padding_value=0)
+    dep_heads = pad_sequence(dep_heads, batch_first=True, padding_value=0)
+
+    # Sort all tensors based on text len.
+    _, sorted_idx = text_len.sort(descending=True)
+    sentence_ids = sentence_ids[sorted_idx]
+    aspect_ids = aspect_ids[sorted_idx]
+    aspect_positions = aspect_positions[sorted_idx]
+    dep_tag_ids = dep_tag_ids[sorted_idx]
+    dep_dir_ids = dep_dir_ids[sorted_idx]
+    pos_class = pos_class[sorted_idx]
+    text_len = text_len[sorted_idx]
+    aspect_len = aspect_len[sorted_idx]
+    sentiment = sentiment[sorted_idx]
+    dep_rel_ids = dep_rel_ids[sorted_idx]
+    dep_heads = dep_heads[sorted_idx]
+
+    return sentence_ids, aspect_ids, dep_tag_ids, pos_class, text_len, aspect_len, sentiment, dep_rel_ids, dep_heads, aspect_positions, dep_dir_ids
+
 
 def get_collate_fn(args):
-    # embedding_type = args.embedding_type
-    # if embedding_type == 'glove':
-    #     return my_collate
+    embedding_type = args.embedding_type
+    if embedding_type == 'glove':
+        return my_collate
     # elif embedding_type == 'elmo':
     #     return my_collate_elmo
-    # else:
-    #     if args.pure_bert:
-    #         return my_collate_pure_bert
-    #     else:
-    #         return my_collate_bert
-    return my_collate_bert
+    else:
+        # if args.pure_bert:
+        #     return my_collate_pure_bert
+        # else:
+        #     return my_collate_bert
+        return my_collate_bert
 
 
 def get_bert_optimizer(args, model):
@@ -201,7 +244,7 @@ def train(args, train_dataset, model, test_dataset):
         epoch_iterator = tqdm(train_dataloader, desc='Iteration')
         # logger.info("start train iterator")
         for step, batch in enumerate(train_dataloader):
-            logger.info("step = %d, tr_loss=%d", step, tr_loss)
+            # logger.info("step = %d, tr_loss=%d", step, tr_loss)
             model.train()
             batch = tuple(t.to(args.device) for t in batch)
 
