@@ -26,7 +26,7 @@ def parse_args():
                         choices=['rest', 'laptop', 'twitter'],
                         help='Choose absa dataset.')
     parser.add_argument('--parser_name', type=str, default='CoreNLP',
-                        choices=['CoreNLP', 'Biaffine', 'Stanza'],
+                        choices=['CoreNLP', 'Biaffine', 'Stanza', 'LPL'],
                         help='Choose dependency parser.')
     parser.add_argument('--dataset_dir', type=str, default='data/depparsed',
                         choices=['rest', 'laptop', 'twitter'],
