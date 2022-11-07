@@ -124,7 +124,7 @@ def main():
 
     os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda_id
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    args.device = 'cpu'
+    args.device = device
     logger.info('Device is %s', args.device)
 
     # Bert, load pretrained model and tokenizer, check if neccesary to put bert here
