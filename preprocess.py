@@ -36,7 +36,8 @@ def parse_args():
     load
 '''
 def load_depparsed(file_path):
-    with open(file_path, 'r') as f:
+    # with open(file_path, 'r',encoding='UTF-8') as f:
+    with open(file_path, 'r',encoding='UTF-8') as f:
         data = json.load(f)
         return data
 
@@ -523,11 +524,27 @@ def get_vocabs(data, args):
 
 # def get_merged_data(reshaped_data):
 
+def my_load_dataset(args):
+    train_file = os.path.join(args.dataset_dir, args.dataset_name, 'py_train',
+                              'py_' + args.parser_name + '.json')
+    test_file = os.path.join(args.dataset_dir, args.dataset_name, 'py_test',
+                              'py_' + args.parser_name + '.json')
+
+    train = list(load_depparsed(train_file))
+    logger.info('# Read %s Train set: %d', args.dataset_name, len(train))
+
+    test = list(load_depparsed(test_file))
+    logger.info("# Read %s Test set: %d", args.dataset_name, len(test))
+    return train, test
+
+
 
 def preprocess(args):
-    train, test = load_dataset(args)
-    train_reshaped = get_reshaped_data(train, args)
-    test_reshaped = get_reshaped_data(test, args)
+    # train, test = load_dataset(args)
+    # train_reshaped = get_reshaped_data(train, args)
+    # test_reshaped = get_reshaped_data(test, args)
+
+    train_reshaped, test_reshaped = my_load_dataset(args)
 
     logger.info('****** After reshaping ******')
     logger.info('Train set size: %s', len(train_reshaped))
