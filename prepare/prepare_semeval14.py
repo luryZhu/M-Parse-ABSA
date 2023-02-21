@@ -11,7 +11,7 @@ model_path = os.path.join(
 
 DATA_DIR = './data'
 data_path = os.path.join(
-    DATA_DIR, "semeval14")
+    DATA_DIR, "example")
 
 
 # ARGUMENTS
@@ -52,9 +52,9 @@ def main():
     # predictor = Predictor.from_path(args.model_path)
 
     # 读入数据并提取句子为txt
-    # data = [('Restaurants_Train_v2.xml', 'Restaurants_Test_Gold.xml'),
+    data = [('Restaurants_Train_v2.xml', 'Restaurants_Test_Gold.xml')]
     #         ('Laptop_Train_v2.xml', 'Laptops_Test_Gold.xml')
-    data = [('train.xml', 'test.xml')]
+    # data = [('train.xml', 'test.xml')]
     for train_file, test_file in data:
         # xml -> txt
         xml2txt(os.path.join(args.data_path, train_file))

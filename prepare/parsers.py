@@ -6,7 +6,7 @@ from lxml import etree
 import json
 import os
 import stanza
-
+from supar import Parser as Biaffine_Predictor
 
 # PATHS
 MODELS_DIR = './models'
@@ -25,6 +25,7 @@ class Parser:
         for i in tqdm(range(len(sentences))):
             docs.append(self.predict(sentence=sentences[i]))
 
+        # print(docs)
         return docs
 
     def parse(self, file_path):
@@ -90,12 +91,19 @@ class Parser:
 
 class Biaffine_Parser(Parser):
     def __init__(self):
-        self.predictor = Predictor.from_path(biaffine_path)
+        parser = Biaffine_Predictor.load('biaffine-dep-en')
+        self.predictor = parser
         self.name = 'Biaffine'
 
     # 解析句法依存树
     def predict(self, sentence):
-        return self.predictor.predict(sentence)
+        raw = self.predictor.predict(sentence, lang='en', verbose=False)
+        doc = {}
+        doc['words'] = raw[0].words
+        doc['tags'] = raw[0].words
+        doc['predicted_dependencies'] = raw[0].rels
+        doc['predicted_heads'] = raw[0].arcs
+        return doc
 
     # 将AllenNLP产生的解析树转换结构
     def format(self, doc):
@@ -109,12 +117,12 @@ class Biaffine_Parser(Parser):
             '''
         sentence = {}
         sentence['tokens'] = doc['words']
-        sentence['tags'] = doc['pos']
+        sentence['tags'] = doc['tags']
         # sentence['energy'] = doc['energy']
         predicted_dependencies = doc['predicted_dependencies']
         predicted_heads = doc['predicted_heads']
-        sentence['predicted_dependencies'] = doc['predicted_dependencies']
-        sentence['predicted_heads'] = doc['predicted_heads']
+        sentence['predicted_dependencies'] = predicted_dependencies
+        sentence['predicted_heads'] = predicted_heads
         sentence['dependencies'] = []
         for idx, item in enumerate(predicted_dependencies):
             dep_tag = item
@@ -194,7 +202,7 @@ class Stanza_Parser(Parser):
 def get_parsers(args):
     parsers = [
         Biaffine_Parser(),
-        CoreNLP_Parser()
+        # CoreNLP_Parser()
     ]
     return parsers
 
