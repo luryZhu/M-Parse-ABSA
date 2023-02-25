@@ -7,6 +7,7 @@ import json
 import os
 import stanza
 from supar import Parser as Biaffine_Predictor
+import re
 
 # PATHS
 MODELS_DIR = './models'
@@ -23,6 +24,8 @@ class Parser:
         docs = []
         print('Predicting dependency information...')
         for i in tqdm(range(len(sentences))):
+            # clean_text = re.sub(r"[^a-zA-Z0-9.,]+", " ", sentences[i])
+            # docs.append(self.predict(sentence=clean_text))
             docs.append(self.predict(sentence=sentences[i]))
 
         # print(docs)
@@ -169,17 +172,13 @@ class CoreNLP_Parser(Parser):
 
 class Stanza_Parser(Parser):
     def __init__(self):
-        stanza.download('en')
-        self.nlp = stanza.Pipeline(lang='en', processors='tokenize,mwt,pos,lemma,depparse')
+        # stanza.download('en')
+        self.nlp = stanza.Pipeline('en',r"D:/stanza_resources", processors='tokenize,mwt,pos,lemma,depparse')
         self.name = 'Stanza'
 
     def predict(self, sentence):
         nlp = self.nlp
-        doc = {}
-        doc['tokens'] = nlp.word_tokenize(sentence)
-        doc['tags'] = [x[1] for x in nlp.pos_tag(sentence)]
-        doc['dependencies'] = list(nlp.dependency_parse(sentence))
-        return doc
+        return nlp(sentence)
 
     def format(self, doc):
         '''
@@ -190,10 +189,25 @@ class Stanza_Parser(Parser):
                                     - predicted_heads
                                     - dependencies
         '''
-        sentence = doc
-        sentence['dependencies'].sort(key=lambda x: x[2])
-        sentence['predicted_dependencies'] = [x[0] for x in sentence['dependencies']]
-        sentence['predicted_heads'] = [x[1] for x in sentence['dependencies']]
+        
+        tokens=[]
+        tags=[]
+        predicted_dependencies=[]
+        predicted_heads=[]
+        dependencies=[]
+        for i, sent in enumerate(doc.sentences):
+            for word in sent.words:
+                tokens.append(word.text)
+                tags.append(word.pos)
+                predicted_dependencies.append(word.deprel)
+                predicted_heads.append(word.head)
+                dependencies.append([word.deprel,word.head,word.id])
+        sentence = {}
+        sentence['tokens']=tokens
+        sentence['tags']=tags
+        sentence['predicted_dependencies'] = predicted_dependencies
+        sentence['predicted_heads'] = predicted_heads
+        sentence['dependencies']=dependencies
         return sentence
 
 
@@ -201,8 +215,9 @@ class Stanza_Parser(Parser):
 
 def get_parsers(args):
     parsers = [
-        Biaffine_Parser(),
+        # Biaffine_Parser()
         # CoreNLP_Parser()
+        Stanza_Parser()
     ]
     return parsers
 
