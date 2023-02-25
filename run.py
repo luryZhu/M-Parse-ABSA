@@ -1,7 +1,7 @@
 import argparse
 import logging
 from preprocess import preprocess
-from model import Aspect_Bert_GAT, Aspect_Text_GAT_only
+from model import Aspect_Bert_GAT, Aspect_Text_GAT_only, Aspect_Text_GAT_ours
 from trainer import train
 import os
 import torch
