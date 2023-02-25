@@ -142,8 +142,8 @@ def main():
     #     model = Pure_Bert(args)
     if args.gat_bert:
         model = Aspect_Bert_GAT(args, dep_tag_vocab['len'], pos_tag_vocab['len'])  # R-GAT + Bert
-    # elif args.gat_our:
-    #     model = Aspect_Text_GAT_ours(args, dep_tag_vocab['len'], pos_tag_vocab['len'])  # R-GAT with reshaped tree
+    elif args.gat_our:
+        model = Aspect_Text_GAT_ours(args, dep_tag_vocab['len'], pos_tag_vocab['len'])  # R-GAT with reshaped tree
     else:
         model = Aspect_Text_GAT_only(args, dep_tag_vocab['len'],
                                      pos_tag_vocab['len'])  # original GAT with reshaped tree
